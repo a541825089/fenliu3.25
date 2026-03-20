@@ -14,6 +14,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import com.ruoyi.common.config.RuoYiConfig;
 import com.ruoyi.common.constant.Constants;
 import com.ruoyi.framework.interceptor.RepeatSubmitInterceptor;
+import com.ruoyi.framework.interceptor.TenantSubscriptionInterceptor;
 
 /**
  * 通用配置
@@ -25,6 +26,9 @@ public class ResourcesConfig implements WebMvcConfigurer
 {
     @Autowired
     private RepeatSubmitInterceptor repeatSubmitInterceptor;
+
+    @Autowired
+    private TenantSubscriptionInterceptor tenantSubscriptionInterceptor;
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry)
@@ -46,6 +50,8 @@ public class ResourcesConfig implements WebMvcConfigurer
     public void addInterceptors(InterceptorRegistry registry)
     {
         registry.addInterceptor(repeatSubmitInterceptor).addPathPatterns("/**");
+        registry.addInterceptor(tenantSubscriptionInterceptor)
+                .addPathPatterns("/system/link/**", "/system/ticket/**", "/system/number/**", "/prod-api/system/link/**", "/prod-api/system/ticket/**", "/prod-api/system/number/**", "/dev-api/system/link/**", "/dev-api/system/ticket/**", "/dev-api/system/number/**");
     }
 
     /**

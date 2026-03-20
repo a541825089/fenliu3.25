@@ -5,6 +5,7 @@ import java.util.List;
 import jakarta.validation.constraints.*;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ruoyi.common.annotation.Excel;
 import com.ruoyi.common.annotation.Excel.ColumnType;
@@ -30,6 +31,11 @@ public class SysUser extends BaseEntity
     /** 部门ID */
     @Excel(name = "部门编号", type = Type.IMPORT)
     private Long deptId;
+
+    private Long tenantId;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date tenantEndTime;
 
     /** 用户账号 */
     @Excel(name = "登录名称")
@@ -127,6 +133,26 @@ public class SysUser extends BaseEntity
     public void setDeptId(Long deptId)
     {
         this.deptId = deptId;
+    }
+
+    public Long getTenantId()
+    {
+        return tenantId;
+    }
+
+    public void setTenantId(Long tenantId)
+    {
+        this.tenantId = tenantId;
+    }
+
+    public Date getTenantEndTime()
+    {
+        return tenantEndTime;
+    }
+
+    public void setTenantEndTime(Date tenantEndTime)
+    {
+        this.tenantEndTime = tenantEndTime;
     }
 
     @Xss(message = "用户昵称不能包含脚本字符")
@@ -313,6 +339,8 @@ public class SysUser extends BaseEntity
         return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
             .append("userId", getUserId())
             .append("deptId", getDeptId())
+            .append("tenantId", getTenantId())
+            .append("tenantEndTime", getTenantEndTime())
             .append("userName", getUserName())
             .append("nickName", getNickName())
             .append("email", getEmail())

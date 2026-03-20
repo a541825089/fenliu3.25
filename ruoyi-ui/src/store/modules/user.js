@@ -13,7 +13,8 @@ const user = {
     nickName: '',
     avatar: '',
     roles: [],
-    permissions: []
+    permissions: [],
+    tenantAccess: {}
   },
 
   mutations: {
@@ -37,6 +38,9 @@ const user = {
     },
     SET_PERMISSIONS: (state, permissions) => {
       state.permissions = permissions
+    },
+    SET_TENANT_ACCESS: (state, tenantAccess) => {
+      state.tenantAccess = tenantAccess || {}
     }
   },
 
@@ -77,6 +81,7 @@ const user = {
           commit('SET_NAME', user.userName)
           commit('SET_NICK_NAME', user.nickName)
           commit('SET_AVATAR', avatar)
+          commit('SET_TENANT_ACCESS', res.tenantAccess)
           /* 初始密码提示 */
           if(res.isDefaultModifyPwd) {
             MessageBox.confirm('您的密码还是初始密码，请修改密码！',  '安全提示', {  confirmButtonText: '确定',  cancelButtonText: '取消',  type: 'warning' }).then(() => {

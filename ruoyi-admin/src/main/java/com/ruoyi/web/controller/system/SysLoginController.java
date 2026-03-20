@@ -23,6 +23,10 @@ import com.ruoyi.framework.web.service.SysPermissionService;
 import com.ruoyi.framework.web.service.TokenService;
 import com.ruoyi.system.service.ISysConfigService;
 import com.ruoyi.system.service.ISysMenuService;
+import com.ruoyi.system.service.ISysTenantSubscriptionService;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 
 /**
  * 登录验证
@@ -46,6 +50,9 @@ public class SysLoginController
 
     @Autowired
     private ISysConfigService configService;
+
+    @Autowired
+    private ISysTenantSubscriptionService tenantSubscriptionService;
 
     /**
      * 登录方法
@@ -87,6 +94,7 @@ public class SysLoginController
         ajax.put("user", user);
         ajax.put("roles", roles);
         ajax.put("permissions", permissions);
+        ajax.put("tenantAccess", buildTenantAccess(user));
         ajax.put("isDefaultModifyPwd", initPasswordIsModify(user.getPwdUpdateDate()));
         ajax.put("isPasswordExpired", passwordIsExpiration(user.getPwdUpdateDate()));
         return ajax;
@@ -127,5 +135,22 @@ public class SysLoginController
             return DateUtils.differentDaysByMillisecond(nowDate, pwdUpdateDate) > passwordValidateDays;
         }
         return false;
+    }
+
+    private Map<String, Object> buildTenantAccess(SysUser user)
+    {
+        if (user == null)
+        {
+            return new HashMap<>();
+        }
+        if (user.isAdmin())
+        {
+            Map<String, Object> map = new HashMap<>();
+            map.put("admin", true);
+            map.put("active", true);
+            map.put("features", new HashSet<>(Set.of("LINK", "TICKET", "NUMBER")));
+            return map;
+        }
+        return tenantSubscriptionService.getTenantAccessInfo(user.getTenantId());
     }
 }

@@ -12,12 +12,15 @@
       <template v-if="device!=='mobile'">
         <search id="header-search" class="right-menu-item" />
 
-        <el-tooltip content="源码地址" effect="dark" placement="bottom">
-          <ruo-yi-git id="ruoyi-git" class="right-menu-item hover-effect" />
-        </el-tooltip>
-
-        <el-tooltip content="文档地址" effect="dark" placement="bottom">
-          <ruo-yi-doc id="ruoyi-doc" class="right-menu-item hover-effect" />
+        <el-tooltip content="Telegram" effect="dark" placement="bottom">
+          <a
+            class="right-menu-item hover-effect"
+            href="https://t.me/XMB88886"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <i class="el-icon-s-promotion"></i>
+          </a>
         </el-tooltip>
 
         <screenfull id="screenfull" class="right-menu-item hover-effect" />
@@ -59,8 +62,6 @@ import Hamburger from '@/components/Hamburger'
 import Screenfull from '@/components/Screenfull'
 import SizeSelect from '@/components/SizeSelect'
 import Search from '@/components/HeaderSearch'
-import RuoYiGit from '@/components/RuoYi/Git'
-import RuoYiDoc from '@/components/RuoYi/Doc'
 
 export default {
   emits: ['setLayout'],
@@ -72,9 +73,7 @@ export default {
     Hamburger,
     Screenfull,
     SizeSelect,
-    Search,
-    RuoYiGit,
-    RuoYiDoc
+    Search
   },
   computed: {
     ...mapGetters([
@@ -212,9 +211,10 @@ export default {
       padding-right: 0px;
 
       .avatar-wrapper {
-        margin-top: 10px;
-        right: 8px;
-        position: relative;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
 
         .user-avatar {
           cursor: pointer;
@@ -224,9 +224,6 @@ export default {
         }
 
         .user-nickname{
-          position: relative;
-          bottom: 10px;
-          left: 2px;
           font-size: 14px;
           font-weight: bold;
         }

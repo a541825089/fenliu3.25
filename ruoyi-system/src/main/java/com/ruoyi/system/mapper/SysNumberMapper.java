@@ -1,0 +1,24 @@
+package com.ruoyi.system.mapper;
+
+import com.ruoyi.system.domain.SysNumber;
+import java.util.List;
+import org.apache.ibatis.annotations.Param;
+
+public interface SysNumberMapper
+{
+    SysNumber selectSysNumberById(@Param("numberId") Long numberId, @Param("tenantId") Long tenantId);
+
+    List<SysNumber> selectSysNumberList(SysNumber sysNumber);
+
+    int insertSysNumber(SysNumber sysNumber);
+
+    int insertSysNumberBatch(@Param("list") List<SysNumber> list);
+
+    int updateSysNumber(SysNumber sysNumber);
+
+    int updateSysNumberStatus(SysNumber sysNumber);
+
+    int deleteSysNumberById(@Param("numberId") Long numberId, @Param("tenantId") Long tenantId);
+
+    int deleteSysNumberByIds(@Param("numberIds") Long[] numberIds, @Param("tenantId") Long tenantId);
+}

@@ -10,6 +10,7 @@ import { saveAs } from 'file-saver'
 let downloadLoadingInstance
 // 是否显示重新登录
 export let isRelogin = { show: false }
+let isTenantBlocked = { show: false }
 
 axios.defaults.headers['Content-Type'] = 'application/json;charset=utf-8'
 // 创建axios实例
@@ -95,6 +96,14 @@ service.interceptors.response.use(res => {
       })
     }
       return Promise.reject('无效的会话，或者会话已过期，请重新登录。')
+    } else if (code === 402) {
+      if (!isTenantBlocked.show) {
+        isTenantBlocked.show = true
+        MessageBox.alert(msg, '订阅提示', { type: 'warning' }).finally(() => {
+          isTenantBlocked.show = false
+        })
+      }
+      return Promise.reject(new Error(msg))
     } else if (code === 500) {
       Message({ message: msg, type: 'error' })
       return Promise.reject(new Error(msg))

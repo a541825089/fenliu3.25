@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import com.ruoyi.common.annotation.DataScope;
 import com.ruoyi.common.constant.UserConstants;
+import com.ruoyi.common.core.domain.entity.SysDept;
 import com.ruoyi.common.core.domain.entity.SysRole;
 import com.ruoyi.common.core.domain.entity.SysUser;
 import com.ruoyi.common.exception.ServiceException;
@@ -21,10 +22,14 @@ import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.common.utils.bean.BeanValidators;
 import com.ruoyi.common.utils.spring.SpringUtils;
 import com.ruoyi.system.domain.SysPost;
+import com.ruoyi.system.domain.SysTenant;
+import com.ruoyi.system.domain.SysTenantSubscription;
 import com.ruoyi.system.domain.SysUserPost;
 import com.ruoyi.system.domain.SysUserRole;
 import com.ruoyi.system.mapper.SysPostMapper;
 import com.ruoyi.system.mapper.SysRoleMapper;
+import com.ruoyi.system.mapper.SysTenantMapper;
+import com.ruoyi.system.mapper.SysTenantSubscriptionMapper;
 import com.ruoyi.system.mapper.SysUserMapper;
 import com.ruoyi.system.mapper.SysUserPostMapper;
 import com.ruoyi.system.mapper.SysUserRoleMapper;
@@ -62,6 +67,12 @@ public class SysUserServiceImpl implements ISysUserService
 
     @Autowired
     private ISysDeptService deptService;
+
+    @Autowired
+    private SysTenantMapper tenantMapper;
+
+    @Autowired
+    private SysTenantSubscriptionMapper tenantSubscriptionMapper;
 
     @Autowired
     protected Validator validator;
@@ -261,13 +272,52 @@ public class SysUserServiceImpl implements ISysUserService
     @Transactional
     public int insertUser(SysUser user)
     {
+        applyTenantForUserWrite(user);
+        ensureTenantForNewUser(user);
         // 新增用户信息
         int rows = userMapper.insertUser(user);
         // 新增用户岗位关联
         insertUserPost(user);
         // 新增用户与角色管理
+        appendCommonRoleIfCommonDept(user);
         insertUserRole(user);
         return rows;
+    }
+
+    private void ensureTenantForNewUser(SysUser user)
+    {
+        if (user == null || StringUtils.isEmpty(user.getUserName()))
+        {
+            return;
+        }
+        Date now = new Date();
+        SysTenant tenant = new SysTenant();
+        tenant.setTenantName(user.getUserName());
+        tenant.setStatus("0");
+        tenant.setCreateBy(user.getCreateBy());
+        tenant.setCreateTime(now);
+        tenantMapper.insertSysTenant(tenant);
+        Long tenantId = tenant.getTenantId();
+        if (tenantId == null)
+        {
+            throw new ServiceException("创建租户失败");
+        }
+        Date endTime = user.getTenantEndTime();
+        if (endTime == null)
+        {
+            endTime = new Date(now.getTime() - 1000L);
+        }
+        Date startTime = new Date(Math.min(now.getTime(), endTime.getTime()) - 1000L);
+        SysTenantSubscription sub = new SysTenantSubscription();
+        sub.setTenantId(tenantId);
+        sub.setPlanId(1L);
+        sub.setStartTime(startTime);
+        sub.setEndTime(endTime);
+        sub.setStatus("0");
+        sub.setCreateBy(user.getCreateBy());
+        sub.setCreateTime(now);
+        tenantSubscriptionMapper.insertSysTenantSubscription(sub);
+        user.setTenantId(tenantId);
     }
 
     /**
@@ -292,10 +342,12 @@ public class SysUserServiceImpl implements ISysUserService
     @Transactional
     public int updateUser(SysUser user)
     {
+        applyTenantForUserWrite(user);
         Long userId = user.getUserId();
         // 删除用户与角色关联
         userRoleMapper.deleteUserRoleByUserId(userId);
         // 新增用户与角色管理
+        appendCommonRoleIfCommonDept(user);
         insertUserRole(user);
         // 删除用户与岗位关联
         userPostMapper.deleteUserPostByUserId(userId);
@@ -511,6 +563,7 @@ public class SysUserServiceImpl implements ISysUserService
         {
             try
             {
+                applyTenantForUserWrite(user);
                 // 验证是否存在这个用户
                 SysUser u = userMapper.selectUserByUserName(user.getUserName());
                 if (StringUtils.isNull(u))
@@ -521,6 +574,7 @@ public class SysUserServiceImpl implements ISysUserService
                     user.setPassword(SecurityUtils.encryptPassword(password));
                     user.setCreateBy(operName);
                     userMapper.insertUser(user);
+                    ensureCommonRoleByDept(user.getUserId(), user.getDeptId());
                     successNum++;
                     successMsg.append("<br/>" + successNum + "、账号 " + user.getUserName() + " 导入成功");
                 }
@@ -534,6 +588,7 @@ public class SysUserServiceImpl implements ISysUserService
                     user.setDeptId(u.getDeptId());
                     user.setUpdateBy(operName);
                     userMapper.updateUser(user);
+                    ensureCommonRoleByDept(u.getUserId(), u.getDeptId());
                     successNum++;
                     successMsg.append("<br/>" + successNum + "、账号 " + user.getUserName() + " 更新成功");
                 }
@@ -561,5 +616,122 @@ public class SysUserServiceImpl implements ISysUserService
             successMsg.insert(0, "恭喜您，数据已全部导入成功！共 " + successNum + " 条，数据如下：");
         }
         return successMsg.toString();
+    }
+
+    private void applyTenantForUserWrite(SysUser user)
+    {
+        if (user == null)
+        {
+            return;
+        }
+        if (SecurityUtils.isAdmin())
+        {
+            return;
+        }
+        Long tenantId = null;
+        try
+        {
+            tenantId = SecurityUtils.getLoginUser().getUser().getTenantId();
+        }
+        catch (Exception e)
+        {
+            tenantId = null;
+        }
+        user.setTenantId(tenantId != null ? tenantId : 1L);
+    }
+
+    private void appendCommonRoleIfCommonDept(SysUser user)
+    {
+        if (!isCommonDept(user))
+        {
+            return;
+        }
+        Long commonRoleId = resolveCommonRoleId();
+        if (commonRoleId == null)
+        {
+            return;
+        }
+        Long[] roleIds = user.getRoleIds();
+        if (StringUtils.isEmpty(roleIds))
+        {
+            user.setRoleIds(new Long[] { commonRoleId });
+            return;
+        }
+        for (Long roleId : roleIds)
+        {
+            if (commonRoleId.equals(roleId))
+            {
+                return;
+            }
+        }
+        Long[] merged = new Long[roleIds.length + 1];
+        System.arraycopy(roleIds, 0, merged, 0, roleIds.length);
+        merged[roleIds.length] = commonRoleId;
+        user.setRoleIds(merged);
+    }
+
+    private void ensureCommonRoleByDept(Long userId, Long deptId)
+    {
+        if (userId == null || deptId == null)
+        {
+            return;
+        }
+        SysUser user = new SysUser();
+        user.setDeptId(deptId);
+        if (!isCommonDept(user))
+        {
+            return;
+        }
+        Long commonRoleId = resolveCommonRoleId();
+        if (commonRoleId == null)
+        {
+            return;
+        }
+        userRoleMapper.insertUserRoleIfAbsent(userId, commonRoleId);
+    }
+
+    private boolean isCommonDept(SysUser user)
+    {
+        if (user == null || user.getDeptId() == null)
+        {
+            return false;
+        }
+        SysDept dept = deptService.selectDeptById(user.getDeptId());
+        if (dept == null || StringUtils.isEmpty(dept.getDeptName()))
+        {
+            return false;
+        }
+        String name = dept.getDeptName().trim();
+        return "普通员工".equals(name) || "普通用户".equals(name);
+    }
+
+    private Long resolveCommonRoleId()
+    {
+        SysRole role = roleMapper.checkRoleKeyUnique("common");
+        if (role == null)
+        {
+            role = roleMapper.checkRoleKeyUnique("4");
+        }
+        if (role == null)
+        {
+            role = roleMapper.checkRoleNameUnique("普通角色");
+        }
+        if (role == null)
+        {
+            role = roleMapper.checkRoleNameUnique("普通员工");
+        }
+        if (role == null)
+        {
+            return null;
+        }
+        if (!UserConstants.ROLE_NORMAL.equals(role.getStatus()))
+        {
+            return null;
+        }
+        if (!"0".equals(role.getDelFlag()))
+        {
+            return null;
+        }
+        return role.getRoleId();
     }
 }

@@ -109,6 +109,20 @@
             </el-form-item>
           </el-col>
         </el-row>
+        <el-row v-if="isAdmin && form.userId == undefined">
+          <el-col :span="12">
+            <el-form-item label="到期时间" prop="tenantEndTime">
+              <el-date-picker
+                v-model="form.tenantEndTime"
+                type="datetime"
+                value-format="yyyy-MM-dd HH:mm:ss"
+                placeholder="请选择到期时间"
+                style="width: 100%"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12"></el-col>
+        </el-row>
         <el-row>
           <el-col :span="12">
             <el-form-item label="手机号码" prop="phonenumber">
@@ -313,8 +327,16 @@ export default {
             message: "请输入正确的手机号码",
             trigger: "blur"
           }
+        ],
+        tenantEndTime: [
+          { required: true, message: "到期时间不能为空", trigger: "change" }
         ]
       }
+    }
+  },
+  computed: {
+    isAdmin() {
+      return (this.$store.getters.roles || []).includes("admin")
     }
   },
   watch: {
@@ -334,12 +356,14 @@ export default {
     /** 查询用户列表 */
     getList() {
       this.loading = true
-      listUser(this.addDateRange(this.queryParams, this.dateRange)).then(response => {
+      listUser(this.addDateRange(this.queryParams, this.dateRange))
+        .then(response => {
           this.userList = response.rows
           this.total = response.total
+        })
+        .finally(() => {
           this.loading = false
-        }
-      )
+        })
     },
     /** 查询部门下拉树结构 */
     getDeptTree() {
@@ -391,6 +415,8 @@ export default {
       this.form = {
         userId: undefined,
         deptId: undefined,
+        tenantId: null,
+        tenantEndTime: null,
         userName: undefined,
         nickName: undefined,
         password: undefined,

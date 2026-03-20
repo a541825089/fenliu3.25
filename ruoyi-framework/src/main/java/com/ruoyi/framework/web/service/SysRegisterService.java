@@ -16,8 +16,15 @@ import com.ruoyi.common.utils.SecurityUtils;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.framework.manager.AsyncManager;
 import com.ruoyi.framework.manager.factory.AsyncFactory;
+import com.ruoyi.system.domain.SysTenant;
+import com.ruoyi.system.domain.SysTenantSubscription;
+import com.ruoyi.system.mapper.SysTenantMapper;
+import com.ruoyi.system.mapper.SysTenantSubscriptionMapper;
 import com.ruoyi.system.service.ISysConfigService;
 import com.ruoyi.system.service.ISysUserService;
+import java.util.Date;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
 /**
  * 注册校验方法
@@ -36,9 +43,16 @@ public class SysRegisterService
     @Autowired
     private RedisCache redisCache;
 
+    @Autowired
+    private SysTenantMapper tenantMapper;
+
+    @Autowired
+    private SysTenantSubscriptionMapper tenantSubscriptionMapper;
+
     /**
      * 注册
      */
+    @Transactional
     public String register(RegisterBody registerBody)
     {
         String msg = "", username = registerBody.getUsername(), password = registerBody.getPassword();
@@ -76,12 +90,16 @@ public class SysRegisterService
         }
         else
         {
+            Date now = DateUtils.getNowDate();
+            Long tenantId = createExpiredTenantForUser(username, now);
+            sysUser.setTenantId(tenantId);
             sysUser.setNickName(username);
-            sysUser.setPwdUpdateDate(DateUtils.getNowDate());
+            sysUser.setPwdUpdateDate(now);
             sysUser.setPassword(SecurityUtils.encryptPassword(password));
             boolean regFlag = userService.registerUser(sysUser);
             if (!regFlag)
             {
+                TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
                 msg = "注册失败,请联系系统管理人员";
             }
             else
@@ -90,6 +108,30 @@ public class SysRegisterService
             }
         }
         return msg;
+    }
+
+    private Long createExpiredTenantForUser(String username, Date now)
+    {
+        SysTenant tenant = new SysTenant();
+        tenant.setTenantName(username);
+        tenant.setStatus("0");
+        tenant.setCreateBy(username);
+        tenant.setCreateTime(now);
+        tenantMapper.insertSysTenant(tenant);
+        Long tenantId = tenant.getTenantId();
+
+        Date endTime = new Date(now.getTime() - 1000L);
+        Date startTime = new Date(endTime.getTime() - 1000L);
+        SysTenantSubscription sub = new SysTenantSubscription();
+        sub.setTenantId(tenantId);
+        sub.setPlanId(1L);
+        sub.setStartTime(startTime);
+        sub.setEndTime(endTime);
+        sub.setStatus("0");
+        sub.setCreateBy(username);
+        sub.setCreateTime(now);
+        tenantSubscriptionMapper.insertSysTenantSubscription(sub);
+        return tenantId;
     }
 
     /**
