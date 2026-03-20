@@ -4,7 +4,7 @@
       <template v-if="isValueMatch(item.value)">
         <span
           v-if="(item.raw.listClass == 'default' || item.raw.listClass == '') && (item.raw.cssClass == '' || item.raw.cssClass == null)"
-          :key="item.value"
+          :key="item.value + '_' + index"
           :index="index"
           :class="item.raw.cssClass"
           >{{ item.label + ' ' }}</span
@@ -12,7 +12,7 @@
         <el-tag
           v-else
           :disable-transitions="true"
-          :key="item.value"
+          :key="item.value + '_' + index"
           :index="index"
           :type="item.raw.listClass == 'primary' ? '' : item.raw.listClass"
           :class="item.raw.cssClass"

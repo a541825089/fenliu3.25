@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysLinkMapper">
+    
+    <resultMap type="SysLink" id="SysLinkResult">
+        <result property="linkId"    column="link_id"    />
+        <result property="targetCountry"    column="target_country"    />
+        <result property="linkUrl"    column="link_url"    />
+        <result property="linkDescription"    column="link_description"    />
+        <result property="replyMsg"    column="reply_msg"    />
+        <result property="ipProtection"    column="ip_protection"    />
+        <result property="isScramble"    column="is_scramble"    />
+        <result property="status"    column="status"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="remark"    column="remark"    />
+    </resultMap>
+
+    <sql id="selectSysLinkVo">
+        select link_id, target_country, link_url, link_description, reply_msg, ip_protection, is_scramble, status, create_by, create_time, update_by, update_time, remark from sys_link
+    </sql>
+
+    <select id="selectSysLinkList" parameterType="SysLink" resultMap="SysLinkResult">
+        <include refid="selectSysLinkVo"/>
+        <where>  
+            <if test="linkUrl != null  and linkUrl != ''"> and link_url like concat('%', #{linkUrl}, '%')</if>
+            <if test="status != null  and status != ''"> and status = #{status}</if>
+        </where>
+    </select>
+    
+    <select id="selectSysLinkById" parameterType="Long" resultMap="SysLinkResult">
+        <include refid="selectSysLinkVo"/>
+        where link_id = #{linkId}
+    </select>
+        
+    <insert id="insertSysLink" parameterType="SysLink" useGeneratedKeys="true" keyProperty="linkId">
+        insert into sys_link
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="targetCountry != null">target_country,</if>
+            <if test="linkUrl != null and linkUrl != ''">link_url,</if>
+            <if test="linkDescription != null">link_description,</if>
+            <if test="replyMsg != null">reply_msg,</if>
+            <if test="ipProtection != null">ip_protection,</if>
+            <if test="isScramble != null">is_scramble,</if>
+            <if test="status != null">status,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="remark != null">remark,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="targetCountry != null">#{targetCountry},</if>
+            <if test="linkUrl != null and linkUrl != ''">#{linkUrl},</if>
+            <if test="linkDescription != null">#{linkDescription},</if>
+            <if test="replyMsg != null">#{replyMsg},</if>
+            <if test="ipProtection != null">#{ipProtection},</if>
+            <if test="isScramble != null">#{isScramble},</if>
+            <if test="status != null">#{status},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="remark != null">#{remark},</if>
+         </trim>
+    </insert>
+
+    <update id="updateSysLink" parameterType="SysLink">
+        update sys_link
+        <set>
+            <if test="targetCountry != null">target_country = #{targetCountry},</if>
+            <if test="linkUrl != null and linkUrl != ''">link_url = #{linkUrl},</if>
+            <if test="linkDescription != null">link_description = #{linkDescription},</if>
+            <if test="replyMsg != null">reply_msg = #{replyMsg},</if>
+            <if test="ipProtection != null">ip_protection = #{ipProtection},</if>
+            <if test="isScramble != null">is_scramble = #{isScramble},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </set>
+        where link_id = #{linkId}
+    </update>
+
+    <delete id="deleteSysLinkById" parameterType="Long">
+        delete from sys_link where link_id = #{linkId}
+    </delete>
+
+    <delete id="deleteSysLinkByIds" parameterType="Long">
+        delete from sys_link where link_id in 
+        <foreach item="linkId" collection="array" open="(" separator="," close=")">
+            #{linkId}
+        </foreach>
+    </delete>
+</mapper>

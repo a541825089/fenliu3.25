@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysTicketMapper">
+    <resultMap type="SysTicket" id="SysTicketResult">
+        <result property="ticketId" column="ticket_id" />
+        <result property="ticketType" column="ticket_type" />
+        <result property="ticketName" column="ticket_name" />
+        <result property="ticketLink" column="ticket_link" />
+        <result property="linkId" column="link_id" />
+        <result property="linkUrl" column="link_url" />
+        <result property="numberType" column="number_type" />
+        <result property="startTime" column="start_time" />
+        <result property="endTime" column="end_time" />
+        <result property="totalCount" column="total_count" />
+        <result property="finishCount" column="finish_count" />
+        <result property="downRatio" column="down_ratio" />
+        <result property="ticketAccount" column="ticket_account" />
+        <result property="ticketPassword" column="ticket_password" />
+        <result property="status" column="status" />
+        <result property="createBy" column="create_by" />
+        <result property="createTime" column="create_time" />
+        <result property="updateBy" column="update_by" />
+        <result property="updateTime" column="update_time" />
+        <result property="remark" column="remark" />
+    </resultMap>
+
+    <sql id="selectSysTicketVo">
+        select
+            t.ticket_id,
+            t.ticket_type,
+            t.ticket_name,
+            t.ticket_link,
+            t.link_id,
+            l.link_url,
+            t.number_type,
+            t.start_time,
+            t.end_time,
+            t.total_count,
+            t.finish_count,
+            t.down_ratio,
+            t.ticket_account,
+            t.ticket_password,
+            t.status,
+            t.create_by,
+            t.create_time,
+            t.update_by,
+            t.update_time,
+            t.remark
+        from sys_ticket t
+        left join sys_link l on l.link_id = t.link_id
+    </sql>
+
+    <select id="selectSysTicketList" parameterType="SysTicket" resultMap="SysTicketResult">
+        <include refid="selectSysTicketVo"/>
+        <where>
+            <if test="ticketType != null and ticketType != ''"> and t.ticket_type = #{ticketType}</if>
+            <if test="ticketName != null and ticketName != ''"> and t.ticket_name like concat('%', #{ticketName}, '%')</if>
+            <if test="ticketLink != null and ticketLink != ''"> and t.ticket_link like concat('%', #{ticketLink}, '%')</if>
+            <if test="status != null and status != ''"> and t.status = #{status}</if>
+        </where>
+        order by t.ticket_id desc
+    </select>
+
+    <select id="selectSysTicketById" parameterType="Long" resultMap="SysTicketResult">
+        <include refid="selectSysTicketVo"/>
+        where t.ticket_id = #{ticketId}
+    </select>
+
+    <insert id="insertSysTicket" parameterType="SysTicket" useGeneratedKeys="true" keyProperty="ticketId">
+        insert into sys_ticket
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="ticketType != null">ticket_type,</if>
+            <if test="ticketName != null and ticketName != ''">ticket_name,</if>
+            <if test="ticketLink != null">ticket_link,</if>
+            <if test="linkId != null">link_id,</if>
+            <if test="numberType != null">number_type,</if>
+            <if test="startTime != null">start_time,</if>
+            <if test="endTime != null">end_time,</if>
+            <if test="totalCount != null">total_count,</if>
+            <if test="finishCount != null">finish_count,</if>
+            <if test="downRatio != null">down_ratio,</if>
+            <if test="ticketAccount != null">ticket_account,</if>
+            <if test="ticketPassword != null">ticket_password,</if>
+            <if test="status != null">status,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="remark != null">remark,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="ticketType != null">#{ticketType},</if>
+            <if test="ticketName != null and ticketName != ''">#{ticketName},</if>
+            <if test="ticketLink != null">#{ticketLink},</if>
+            <if test="linkId != null">#{linkId},</if>
+            <if test="numberType != null">#{numberType},</if>
+            <if test="startTime != null">#{startTime},</if>
+            <if test="endTime != null">#{endTime},</if>
+            <if test="totalCount != null">#{totalCount},</if>
+            <if test="finishCount != null">#{finishCount},</if>
+            <if test="downRatio != null">#{downRatio},</if>
+            <if test="ticketAccount != null">#{ticketAccount},</if>
+            <if test="ticketPassword != null">#{ticketPassword},</if>
+            <if test="status != null">#{status},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="remark != null">#{remark},</if>
+        </trim>
+    </insert>
+
+    <update id="updateSysTicket" parameterType="SysTicket">
+        update sys_ticket
+        <set>
+            <if test="ticketType != null">ticket_type = #{ticketType},</if>
+            <if test="ticketName != null and ticketName != ''">ticket_name = #{ticketName},</if>
+            <if test="ticketLink != null">ticket_link = #{ticketLink},</if>
+            <if test="linkId != null">link_id = #{linkId},</if>
+            <if test="numberType != null">number_type = #{numberType},</if>
+            <if test="startTime != null">start_time = #{startTime},</if>
+            <if test="endTime != null">end_time = #{endTime},</if>
+            <if test="totalCount != null">total_count = #{totalCount},</if>
+            <if test="finishCount != null">finish_count = #{finishCount},</if>
+            <if test="downRatio != null">down_ratio = #{downRatio},</if>
+            <if test="ticketAccount != null">ticket_account = #{ticketAccount},</if>
+            <if test="ticketPassword != null">ticket_password = #{ticketPassword},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </set>
+        where ticket_id = #{ticketId}
+    </update>
+
+    <delete id="deleteSysTicketById" parameterType="Long">
+        delete from sys_ticket where ticket_id = #{ticketId}
+    </delete>
+
+    <delete id="deleteSysTicketByIds" parameterType="Long">
+        delete from sys_ticket where ticket_id in
+        <foreach item="ticketId" collection="array" open="(" separator="," close=")">
+            #{ticketId}
+        </foreach>
+    </delete>
+</mapper>

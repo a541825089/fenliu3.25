@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysNumberMapper">
+    <resultMap type="SysNumber" id="SysNumberResult">
+        <result property="numberId" column="number_id" />
+        <result property="linkId" column="link_id" />
+        <result property="linkUrl" column="link_url" />
+        <result property="ticketNo" column="ticket_no" />
+        <result property="numberValue" column="number_value" />
+        <result property="numberType" column="number_type" />
+        <result property="visitCount" column="visit_count" />
+        <result property="inCount" column="in_count" />
+        <result property="status" column="status" />
+        <result property="createBy" column="create_by" />
+        <result property="createTime" column="create_time" />
+        <result property="updateBy" column="update_by" />
+        <result property="updateTime" column="update_time" />
+        <result property="remark" column="remark" />
+    </resultMap>
+
+    <sql id="selectSysNumberVo">
+        select
+            n.number_id,
+            n.link_id,
+            l.link_url,
+            n.ticket_no,
+            n.number_value,
+            n.number_type,
+            n.visit_count,
+            n.in_count,
+            n.status,
+            n.create_by,
+            n.create_time,
+            n.update_by,
+            n.update_time,
+            n.remark
+        from sys_number n
+        left join sys_link l on l.link_id = n.link_id
+    </sql>
+
+    <select id="selectSysNumberList" parameterType="SysNumber" resultMap="SysNumberResult">
+        <include refid="selectSysNumberVo"/>
+        <where>
+            <if test="linkUrl != null and linkUrl != ''"> and l.link_url like concat('%', #{linkUrl}, '%')</if>
+            <if test="ticketNo != null and ticketNo != ''"> and n.ticket_no like concat('%', #{ticketNo}, '%')</if>
+            <if test="numberValue != null and numberValue != ''"> and n.number_value like concat('%', #{numberValue}, '%')</if>
+            <if test="numberType != null and numberType != ''"> and n.number_type = #{numberType}</if>
+            <if test="status != null and status != ''"> and n.status = #{status}</if>
+        </where>
+        order by n.number_id desc
+    </select>
+
+    <select id="selectSysNumberById" parameterType="Long" resultMap="SysNumberResult">
+        <include refid="selectSysNumberVo"/>
+        where n.number_id = #{numberId}
+    </select>
+
+    <insert id="insertSysNumber" parameterType="SysNumber" useGeneratedKeys="true" keyProperty="numberId">
+        insert into sys_number
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="linkId != null">link_id,</if>
+            <if test="ticketNo != null">ticket_no,</if>
+            <if test="numberValue != null and numberValue != ''">number_value,</if>
+            <if test="numberType != null">number_type,</if>
+            <if test="visitCount != null">visit_count,</if>
+            <if test="inCount != null">in_count,</if>
+            <if test="status != null">status,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="remark != null">remark,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="linkId != null">#{linkId},</if>
+            <if test="ticketNo != null">#{ticketNo},</if>
+            <if test="numberValue != null and numberValue != ''">#{numberValue},</if>
+            <if test="numberType != null">#{numberType},</if>
+            <if test="visitCount != null">#{visitCount},</if>
+            <if test="inCount != null">#{inCount},</if>
+            <if test="status != null">#{status},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="remark != null">#{remark},</if>
+        </trim>
+    </insert>
+
+    <insert id="insertSysNumberBatch">
+        insert into sys_number (
+            link_id,
+            ticket_no,
+            number_value,
+            number_type,
+            visit_count,
+            in_count,
+            status,
+            create_by,
+            create_time
+        )
+        values
+        <foreach collection="list" item="item" separator=",">
+            (
+                #{item.linkId},
+                #{item.ticketNo},
+                #{item.numberValue},
+                #{item.numberType},
+                #{item.visitCount},
+                #{item.inCount},
+                #{item.status},
+                #{item.createBy},
+                #{item.createTime}
+            )
+        </foreach>
+    </insert>
+
+    <update id="updateSysNumber" parameterType="SysNumber">
+        update sys_number
+        <set>
+            <if test="linkId != null">link_id = #{linkId},</if>
+            <if test="ticketNo != null">ticket_no = #{ticketNo},</if>
+            <if test="numberValue != null and numberValue != ''">number_value = #{numberValue},</if>
+            <if test="numberType != null">number_type = #{numberType},</if>
+            <if test="visitCount != null">visit_count = #{visitCount},</if>
+            <if test="inCount != null">in_count = #{inCount},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </set>
+        where number_id = #{numberId}
+    </update>
+
+    <update id="updateSysNumberStatus" parameterType="SysNumber">
+        update sys_number
+        set status = #{status}, update_by = #{updateBy}, update_time = #{updateTime}
+        where number_id = #{numberId}
+    </update>
+
+    <delete id="deleteSysNumberById" parameterType="Long">
+        delete from sys_number where number_id = #{numberId}
+    </delete>
+
+    <delete id="deleteSysNumberByIds" parameterType="Long">
+        delete from sys_number where number_id in
+        <foreach item="numberId" collection="array" open="(" separator="," close=")">
+            #{numberId}
+        </foreach>
+    </delete>
+</mapper>
