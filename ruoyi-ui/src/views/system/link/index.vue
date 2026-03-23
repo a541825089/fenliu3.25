@@ -81,7 +81,7 @@
               <el-link
                 type="primary"
                 :underline="false"
-                v-clipboard:copy="scope.row.linkUrl"
+                v-clipboard:copy="getCopyLinkUrl(scope.row.linkUrl)"
                 v-clipboard:success="clipboardSuccess"
                 v-clipboard:error="clipboardError"
               >
@@ -459,6 +459,26 @@ export default {
     },
     clipboardError() {
       this.$modal.msgError("复制失败");
+    },
+    getCopyLinkUrl(linkUrl) {
+      if (!linkUrl) {
+        return "";
+      }
+      const url = String(linkUrl).trim();
+      if (!url) {
+        return "";
+      }
+      if (/^https?:\/\//i.test(url)) {
+        return url;
+      }
+      const origin = (window && window.location && window.location.origin) ? window.location.origin : "";
+      if (!origin) {
+        return url;
+      }
+      if (url.startsWith("/")) {
+        return origin + url;
+      }
+      return origin + "/" + url;
     },
     // 取消按钮
     cancel() {
