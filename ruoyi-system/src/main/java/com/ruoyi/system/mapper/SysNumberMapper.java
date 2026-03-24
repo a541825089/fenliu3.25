@@ -21,4 +21,12 @@ public interface SysNumberMapper
     int deleteSysNumberById(@Param("numberId") Long numberId, @Param("tenantId") Long tenantId);
 
     int deleteSysNumberByIds(@Param("numberIds") Long[] numberIds, @Param("tenantId") Long tenantId);
+
+    SysNumber selectNextAvailableByLink(@Param("linkId") Long linkId, @Param("numberType") String numberType, @Param("tenantId") Long tenantId);
+
+    int touchNumber(@Param("numberId") Long numberId, @Param("tenantId") Long tenantId, @Param("updateBy") String updateBy, @Param("updateTime") java.util.Date updateTime);
+
+    List<String> selectNumberValuesByLink(@Param("tenantId") Long tenantId, @Param("linkId") Long linkId, @Param("numberType") String numberType);
+
+    int deleteByValue(@Param("tenantId") Long tenantId, @Param("linkId") Long linkId, @Param("numberValue") String numberValue, @Param("numberType") String numberType);
 }

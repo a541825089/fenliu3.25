@@ -102,12 +102,12 @@
       <el-table-column label="工单名称" align="center" prop="ticketName" :show-overflow-tooltip="true" min-width="160" />
       <el-table-column label="工单链接" align="center" prop="ticketLink" :show-overflow-tooltip="true" min-width="180">
         <template slot-scope="scope">
-          <el-link v-if="scope.row.ticketLink" type="primary" :href="scope.row.ticketLink" target="_blank">{{ scope.row.ticketLink }}</el-link>
+          <el-link v-if="scope.row.ticketLink" type="primary" :underline="false" @click="openTicketLink(scope.row)">{{ scope.row.ticketLink }}</el-link>
         </template>
       </el-table-column>
       <el-table-column label="分流链接" align="center" prop="linkUrl" :show-overflow-tooltip="true" min-width="180">
         <template slot-scope="scope">
-          <el-link v-if="scope.row.linkUrl" type="primary" :href="scope.row.linkUrl" target="_blank">{{ scope.row.linkUrl }}</el-link>
+          <el-link v-if="scope.row.linkUrl" type="primary" :underline="false" @click="openWhatsapp(scope.row)">{{ scope.row.linkUrl }}</el-link>
         </template>
       </el-table-column>
       <el-table-column label="号码类型" align="center" prop="numberType" width="120">
@@ -283,6 +283,7 @@
 import { addLink, listLink } from "@/api/system/link";
 import { getDicts } from "@/api/system/dict/data";
 import { addTicket, delTicket, getTicket, listTicket, updateTicket } from "@/api/system/ticket";
+import request from "@/utils/request";
 
 export default {
   name: "Ticket",
@@ -486,6 +487,57 @@ export default {
       }).catch(() => {
         this.linkLoading = false;
       });
+    },
+    async openTicketLink(row) {
+      const ticketLink = row.ticketLink;
+      const ticketPassword = row.ticketPassword;
+      if (ticketPassword) {
+        try { await navigator.clipboard.writeText(String(ticketPassword)); } catch (e) {}
+      }
+      let url = ticketLink;
+      if (ticketLink && ticketPassword) {
+        try {
+          const resp = await request({
+            url: "/system/number/resolveFinalUrl",
+            method: "post",
+            data: { ticketLink, ticketPassword }
+          });
+          if (resp && resp.data) {
+            url = resp.data;
+          }
+        } catch (e) {}
+      }
+      if (url) {
+        window.open(url, "_blank");
+      }
+    },
+    async openWhatsapp(row) {
+      const linkId = row.linkId;
+      const numberType = row.numberType || "ws";
+      const ticketLink = row.ticketLink;
+      const ticketPassword = row.ticketPassword;
+      const ticketNo = String(row.ticketId || "");
+      const getNext = () => request({
+        url: "/system/number/nextWs",
+        method: "get",
+        params: { linkId, numberType }
+      }).then(r => r.data);
+      let phone = await getNext();
+      if (!phone) {
+        try {
+          await request({
+            url: "/system/number/importWsFromTicketLink",
+            method: "post",
+            data: { ticketLink, ticketPassword, linkId, ticketNo, numberType }
+          });
+        } catch (e) {}
+        phone = await getNext();
+      }
+      if (!phone) {
+        this.$modal.msgError("未获取到WS号码");
+        return;
+      }
+      window.open(`https://api.whatsapp.com/send/?phone=${encodeURIComponent(phone)}&app_absent=0`, "_blank");
     }
   }
 };

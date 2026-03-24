@@ -7,6 +7,7 @@ import com.ruoyi.system.domain.SysLink;
 import com.ruoyi.system.domain.SysTicket;
 import com.ruoyi.system.mapper.SysLinkMapper;
 import com.ruoyi.system.mapper.SysTicketMapper;
+import com.ruoyi.system.service.ISysNumberService;
 import com.ruoyi.system.service.ISysTicketService;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,9 @@ public class SysTicketServiceImpl implements ISysTicketService
 
     @Autowired
     private SysLinkMapper sysLinkMapper;
+
+    @Autowired
+    private ISysNumberService sysNumberService;
 
     @Override
     public SysTicket selectSysTicketById(Long ticketId)
@@ -40,8 +44,28 @@ public class SysTicketServiceImpl implements ISysTicketService
     {
         applyTenantForWrite(sysTicket);
         checkLinkAccess(sysTicket.getLinkId(), sysTicket.getTenantId());
+        String originalLink = sysTicket.getTicketLink();
+        if (originalLink != null && !originalLink.trim().isEmpty())
+        {
+            String finalUrl = sysNumberService.resolveFinalUrl(originalLink, sysTicket.getTicketPassword());
+            if (finalUrl != null && !finalUrl.trim().isEmpty())
+            {
+                sysTicket.setTicketLink(finalUrl);
+            }
+        }
         sysTicket.setCreateTime(DateUtils.getNowDate());
-        return sysTicketMapper.insertSysTicket(sysTicket);
+        int rows = sysTicketMapper.insertSysTicket(sysTicket);
+        if (rows > 0 && originalLink != null && !originalLink.trim().isEmpty())
+        {
+            sysNumberService.importWsNumbersByTicketLink(
+                originalLink,
+                sysTicket.getTicketPassword(),
+                sysTicket.getLinkId(),
+                String.valueOf(sysTicket.getTicketId()),
+                sysTicket.getNumberType()
+            );
+        }
+        return rows;
     }
 
     @Override
@@ -49,8 +73,28 @@ public class SysTicketServiceImpl implements ISysTicketService
     {
         applyTenantForWrite(sysTicket);
         checkLinkAccess(sysTicket.getLinkId(), sysTicket.getTenantId());
+        String originalLink = sysTicket.getTicketLink();
+        if (originalLink != null && !originalLink.trim().isEmpty())
+        {
+            String finalUrl = sysNumberService.resolveFinalUrl(originalLink, sysTicket.getTicketPassword());
+            if (finalUrl != null && !finalUrl.trim().isEmpty())
+            {
+                sysTicket.setTicketLink(finalUrl);
+            }
+        }
         sysTicket.setUpdateTime(DateUtils.getNowDate());
-        return sysTicketMapper.updateSysTicket(sysTicket);
+        int rows = sysTicketMapper.updateSysTicket(sysTicket);
+        if (rows > 0 && originalLink != null && !originalLink.trim().isEmpty())
+        {
+            sysNumberService.importWsNumbersByTicketLink(
+                originalLink,
+                sysTicket.getTicketPassword(),
+                sysTicket.getLinkId(),
+                String.valueOf(sysTicket.getTicketId()),
+                sysTicket.getNumberType()
+            );
+        }
+        return rows;
     }
 
     @Override

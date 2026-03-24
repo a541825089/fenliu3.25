@@ -18,4 +18,12 @@ public interface ISysNumberService
     int deleteSysNumberByIds(Long[] numberIds);
 
     int deleteSysNumberById(Long numberId);
+
+    String nextWsNumberByLink(Long linkId, String numberType);
+
+    String resolveFinalUrl(String ticketLink, String ticketPassword);
+
+    int importWsNumbersByTicketLink(String ticketLink, String ticketPassword, Long linkId, String ticketNo, String numberType);
+
+    int syncWsNumbersAndCleanup();
 }

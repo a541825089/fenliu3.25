@@ -10,6 +10,7 @@ import com.ruoyi.system.domain.SysNumber;
 import com.ruoyi.system.service.ISysNumberService;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -87,5 +88,46 @@ public class SysNumberController extends BaseController
     public AjaxResult remove(@PathVariable Long[] numberIds)
     {
         return toAjax(sysNumberService.deleteSysNumberByIds(numberIds));
+    }
+
+    @PreAuthorize("@ss.hasPermi('system:ticket:list')")
+    @GetMapping("/nextWs")
+    public AjaxResult nextWs(Long linkId, String numberType)
+    {
+        String v = sysNumberService.nextWsNumberByLink(linkId, numberType);
+        return AjaxResult.success(v);
+    }
+
+    @PreAuthorize("@ss.hasPermi('system:ticket:list')")
+    @PostMapping("/resolveFinalUrl")
+    public AjaxResult resolveFinalUrl(@RequestBody Map<String, Object> payload)
+    {
+        String ticketLink = payload.get("ticketLink") == null ? null : String.valueOf(payload.get("ticketLink"));
+        String ticketPassword = payload.get("ticketPassword") == null ? null : String.valueOf(payload.get("ticketPassword"));
+        String finalUrl = sysNumberService.resolveFinalUrl(ticketLink, ticketPassword);
+        return AjaxResult.success(finalUrl);
+    }
+
+    @PreAuthorize("@ss.hasPermi('system:number:add')")
+    @Log(title = "号码管理", businessType = BusinessType.INSERT)
+    @PostMapping("/importWsFromTicketLink")
+    public AjaxResult importWsFromTicketLink(@RequestBody Map<String, Object> payload)
+    {
+        String ticketLink = payload.get("ticketLink") == null ? null : String.valueOf(payload.get("ticketLink"));
+        String ticketPassword = payload.get("ticketPassword") == null ? null : String.valueOf(payload.get("ticketPassword"));
+        String ticketNo = payload.get("ticketNo") == null ? null : String.valueOf(payload.get("ticketNo"));
+        Long linkId = null;
+        Object linkIdObj = payload.get("linkId");
+        if (linkIdObj != null)
+        {
+            try
+            {
+                linkId = Long.valueOf(String.valueOf(linkIdObj));
+            }
+            catch (Exception ignored) {}
+        }
+        String numberType = payload.get("numberType") == null ? null : String.valueOf(payload.get("numberType"));
+        int rows = sysNumberService.importWsNumbersByTicketLink(ticketLink, ticketPassword, linkId, ticketNo, numberType);
+        return AjaxResult.success(rows);
     }
 }

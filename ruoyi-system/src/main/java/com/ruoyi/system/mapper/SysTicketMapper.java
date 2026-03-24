@@ -10,9 +10,13 @@ public interface SysTicketMapper
 
     List<SysTicket> selectSysTicketList(SysTicket sysTicket);
 
+    List<SysTicket> selectTicketsForWsSync();
+
     int insertSysTicket(SysTicket sysTicket);
 
     int updateSysTicket(SysTicket sysTicket);
+
+    int updateTicketLink(@Param("ticketId") Long ticketId, @Param("tenantId") Long tenantId, @Param("ticketLink") String ticketLink);
 
     int deleteSysTicketById(@Param("ticketId") Long ticketId, @Param("tenantId") Long tenantId);
 

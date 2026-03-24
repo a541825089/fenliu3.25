@@ -72,6 +72,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <if test="tenantId != null"> and t.tenant_id = #{tenantId}</if>
     </select>
 
+    <select id="selectTicketsForWsSync" resultMap="SysTicketResult">
+        <include refid="selectSysTicketVo"/>
+        where t.status = '0'
+    </select>
+
     <insert id="insertSysTicket" parameterType="SysTicket" useGeneratedKeys="true" keyProperty="ticketId">
         insert into sys_ticket
         <trim prefix="(" suffix=")" suffixOverrides=",">
@@ -117,6 +122,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="remark != null">#{remark},</if>
         </trim>
     </insert>
+
+    <update id="updateTicketLink">
+        update sys_ticket
+        set ticket_link = #{ticketLink}
+        where ticket_id = #{ticketId}
+        <if test="tenantId != null"> and tenant_id = #{tenantId}</if>
+    </update>
 
     <update id="updateSysTicket" parameterType="SysTicket">
         update sys_ticket

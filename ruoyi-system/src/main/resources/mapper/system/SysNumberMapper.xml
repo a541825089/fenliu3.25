@@ -164,4 +164,40 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         </foreach>
         <if test="tenantId != null"> and tenant_id = #{tenantId}</if>
     </delete>
+
+    <select id="selectNextAvailableByLink" resultMap="SysNumberResult">
+        <include refid="selectSysNumberVo"/>
+        where 1=1
+        <if test="tenantId != null"> and n.tenant_id = #{tenantId}</if>
+        <if test="linkId != null"> and n.link_id = #{linkId}</if>
+        <if test="numberType != null and numberType != ''"> and n.number_type = #{numberType}</if>
+        and n.status = '0'
+        order by n.update_time asc, n.number_id asc
+        limit 1
+    </select>
+
+    <update id="touchNumber">
+        update sys_number
+        set update_by = #{updateBy}, update_time = #{updateTime}
+        where number_id = #{numberId}
+        <if test="tenantId != null"> and tenant_id = #{tenantId}</if>
+    </update>
+
+    <select id="selectNumberValuesByLink" resultType="java.lang.String">
+        select n.number_value
+        from sys_number n
+        where 1=1
+        <if test="tenantId != null"> and n.tenant_id = #{tenantId}</if>
+        <if test="linkId != null"> and n.link_id = #{linkId}</if>
+        <if test="numberType != null and numberType != ''"> and n.number_type = #{numberType}</if>
+    </select>
+
+    <delete id="deleteByValue">
+        delete from sys_number
+        where 1=1
+        <if test="tenantId != null"> and tenant_id = #{tenantId}</if>
+        <if test="linkId != null"> and link_id = #{linkId}</if>
+        <if test="numberType != null and numberType != ''"> and number_type = #{numberType}</if>
+        and number_value = #{numberValue}
+    </delete>
 </mapper>
